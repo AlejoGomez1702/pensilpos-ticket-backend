@@ -29,7 +29,7 @@ class Server {
     listen() {
         this.app.listen(this.port, () => {
             console.log('═══════════════════════════════════════');
-            console.log('🚀 Sisinpos Ticket Backend');
+            console.log('🚀 Pensilpos Ticket Backend');
             console.log('═══════════════════════════════════════');
             console.log(`📡 Server: http://localhost:${this.port}`);
             console.log(`📋 Environment: ${config.env}`);

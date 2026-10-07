@@ -190,7 +190,7 @@ const buildFooterSection = (encoder) => {
         .align('center')
         .font('A')
         .bold(true)
-        .line('Desarrollado por: Pensil Devs | sisinpos.com')
+        .line('Desarrollado por: Pensil Devs | pensildevs.com')
         .bold(false);
 };
 

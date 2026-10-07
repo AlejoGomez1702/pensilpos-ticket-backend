@@ -2,8 +2,8 @@ const Service = require('node-windows').Service;
 const path = require('path');
 
 const svc = new Service({
-    name: 'Sisinpos Ticket Service',
-    description: 'Backend service for Sisinpos Ticket system',
+    name: 'Pensilpos Ticket Service',
+    description: 'Backend service for Pensilpos Ticket system',
     script: path.join(__dirname, 'src', 'app.js'),
     // Configuración de auto-inicio
     nodeOptions: [
@@ -23,7 +23,7 @@ const svc = new Service({
 svc.on('install', () => {
     svc.start();
     console.log('✓ Service installed and started successfully.');
-    console.log('✓ Service name: Sisinpos Ticket Service');
+    console.log('✓ Service name: Pensilpos Ticket Service');
 });
 
 svc.on('alreadyinstalled', () => {
@@ -67,7 +67,7 @@ switch (command) {
     case '--help':
     case '-h':
     default:
-        console.log('\n=== Sisinpos Ticket Service Manager ===\n');
+        console.log('\n=== Pensilpos Ticket Service Manager ===\n');
         console.log('Usage: node node-service.js [command]\n');
         console.log('Commands:');
         console.log('  --install, -i      Install and start the service');

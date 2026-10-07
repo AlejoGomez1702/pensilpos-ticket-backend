@@ -6,7 +6,7 @@ module.exports = {
   
   // Configuración de la impresora por defecto
   printer: {
-    name: process.env.PRINTER_NAME || null, // null = usar impresora por defecto del sistema
+    name: process.env.PRINTER_NAME || 'Pensilpos', // Nombre de la impresora configurada en el SO
     encoding: 'utf-8',
     language: 'esc-pos' // esc-pos, star-line, star-prnt
   }

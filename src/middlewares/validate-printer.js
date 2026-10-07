@@ -3,6 +3,7 @@ const SystemReceiptPrinter = require('@point-of-sale/system-receipt-printer');
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
+const config = require('../config/config');
 
 /**
  * Verifica el estado real de la impresora usando PowerShell
@@ -25,37 +26,38 @@ const validatePrinter = async (req = request, res = response, next) => {
         // Obtener lista de impresoras disponibles
         const printers = SystemReceiptPrinter.getPrinters();
         
-        // Buscar la impresora "Sisinpos"
-        const sisinposPrinter = printers.find(p => p.name === 'Sisinpos');
+        // Buscar la impresora configurada (PRINTER_NAME)
+        const printerName = config.printer.name;
+        const printer = printers.find(p => p.name === printerName);
         
-        if (!sisinposPrinter) {
-            console.error('❌ Impresora "Sisinpos" no encontrada');
+        if (!printer) {
+            console.error(`❌ Impresora "${printerName}" no encontrada`);
             console.log('📋 Impresoras disponibles:', printers.map(p => p.name));
             
             return res.status(500).json({
                 ok: false,
-                msg: 'Impresora "Sisinpos" no configurada',
-                error: 'Por favor, configure una impresora con el nombre "Sisinpos" en su sistema operativo',
+                msg: `Impresora "${printerName}" no configurada`,
+                error: `Por favor, configure una impresora con el nombre "${printerName}" en su sistema operativo`,
                 availablePrinters: printers.map(p => p.name)
             });
         }
 
         // Verificar estado real de la impresora (conectada físicamente)
-        const isOnline = await isPrinterOnline(sisinposPrinter.name);
+        const isOnline = await isPrinterOnline(printer.name);
         
         if (!isOnline) {
-            console.warn('⚠️  Impresora "Sisinpos" está DESCONECTADA o APAGADA');
+            console.warn(`⚠️  Impresora "${printerName}" está DESCONECTADA o APAGADA`);
             return res.status(503).json({
                 ok: false,
                 msg: 'Impresora desconectada',
-                error: 'La impresora "Sisinpos" está desconectada o apagada. Por favor, verifique la conexión USB y que esté encendida.',
-                printerName: sisinposPrinter.name
+                error: `La impresora "${printerName}" está desconectada o apagada. Por favor, verifique la conexión USB y que esté encendida.`,
+                printerName: printer.name
             });
         }
         
         // Guardar la impresora en el request para usarla en el controlador
-        req.ticket.printer = sisinposPrinter;
-        console.log(`✓ Impresora "Sisinpos" conectada y lista`);
+        req.ticket.printer = printer;
+        console.log(`✓ Impresora "${printerName}" conectada y lista`);
         
         next();
         

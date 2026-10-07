@@ -1,4 +1,4 @@
-# Sisinpos Ticket Backend
+# Pensilpos Ticket Backend
 
 Servicio local para impresión de recibos en impresoras ESC/POS.
 
@@ -34,11 +34,12 @@ npm start
 
 ## 📝 Configuración
 
-Crear archivo `.env`:
+Crear archivo `.env` a partir de `.env.example`:
 
 \`\`\`env
 PORT=3000
 NODE_ENV=development
+PRINTER_NAME=Pensilpos   # Nombre de la impresora en el SO (default: Pensilpos)
 \`\`\`
 
 ## 📄 Licencia
