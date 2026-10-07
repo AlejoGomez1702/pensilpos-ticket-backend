@@ -1,6 +1,7 @@
 const ReceiptPrinterEncoder = require('@point-of-sale/receipt-printer-encoder');
 const { createCanvas, loadImage } = require('canvas');
 const path = require('path');
+const config = require('../config/config');
 
 /**
  * Construye la sección del encabezado del establecimiento
@@ -58,12 +59,7 @@ const buildProductsTableHeader = (encoder) => {
     return encoder
         .align('left')
         .table(
-            [
-                { width: 22, align: 'left' },
-                { width: 3,  align: 'center' },
-                { width: 11,  align: 'right' },
-                { width: 12,  align: 'right' }
-            ],
+            config.printer.paper.productsTable,
             [
                 [
                     (encoder) => encoder.bold(true).text('Producto').bold(false),
@@ -99,12 +95,7 @@ const buildProductsSection = (encoder, products) => {
         // Tabla con información del producto
         ticketEncoder = ticketEncoder
             .table(
-                [
-                    { width: 22, align: 'left' },
-                    { width: 3,  align: 'center' },
-                    { width: 11,  align: 'right' },
-                    { width: 12,  align: 'right' }
-                ],
+                config.printer.paper.productsTable,
                 [
                     [ product.name, quantity, unitPrice, total ]
                 ]
@@ -202,7 +193,7 @@ const buildFooterSection = (encoder) => {
 const buildTicket = (ticketData) => {
     const encoder = new ReceiptPrinterEncoder({
         language: 'esc-pos',
-        columns: 48,
+        columns: config.printer.paper.columns,
         feedBeforeCut: 4,
         createCanvas: createCanvas
     });

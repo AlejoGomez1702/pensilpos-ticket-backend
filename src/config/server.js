@@ -34,6 +34,7 @@ class Server {
             console.log(`📡 Server: http://localhost:${this.port}`);
             console.log(`📋 Environment: ${config.env}`);
             console.log(`🖨️  Printer: ${config.printer.name || 'Default system printer'}`);
+            console.log(`📄 Paper: ${config.printer.paper.name}`);
             console.log('═══════════════════════════════════════');
         });
     }

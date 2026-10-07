@@ -1,6 +1,7 @@
 const ReceiptPrinterEncoder = require('@point-of-sale/receipt-printer-encoder');
 const { createCanvas, loadImage } = require('canvas');
 const path = require('path');
+const config = require('../config/config');
 
 /**
  * Construye la sección del encabezado del ticket de cocina
@@ -127,7 +128,7 @@ const buildKitchenFooterSection = (encoder, products, ticketData) => {
 const buildKitchenTicket = (kitchenTicketData) => {
     const encoder = new ReceiptPrinterEncoder({
         language: 'esc-pos',
-        columns: 48,
+        columns: config.printer.paper.columns,
         feedBeforeCut: 4,
         createCanvas: createCanvas
     });

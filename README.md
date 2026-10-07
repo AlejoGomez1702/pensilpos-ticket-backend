@@ -24,8 +24,11 @@ Variables del archivo `.env` (ver `.env.example`):
 | `PORT`         | Puerto del servidor                           | `3000`        |
 | `NODE_ENV`     | `development` \| `production`                 | `development` |
 | `PRINTER_NAME` | Nombre de la impresora en el sistema operativo | `Pensilpos`   |
+| `PAPER_SIZE`   | Tamaño de papel (perfiles en `src/config/paper-sizes.js`) | `80mm` |
 
 La impresora debe estar instalada en el sistema operativo con el nombre indicado en `PRINTER_NAME`.
+
+Para soportar un nuevo tamaño de papel, agregar un perfil en `src/config/paper-sizes.js` y seleccionarlo con `PAPER_SIZE`.
 
 ## 🔧 Desarrollo
 
