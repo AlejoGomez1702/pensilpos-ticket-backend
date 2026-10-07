@@ -15,7 +15,7 @@
     "@point-of-sale/receipt-printer-encoder": "^3.0.3",
     "@point-of-sale/system-receipt-printer": "^2.0.1",
     "body-parser": "^2.2.1",
-    "canvas": "^2.11.2",
+    "canvas": "^3.2.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
