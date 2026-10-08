@@ -10,11 +10,13 @@ const PRINT_TIMEOUT_MS = 2000;
 const sendToPrinter = (printer, data) => {
     return new Promise((resolve, reject) => {
         let resolved = false;
+        let timeoutId = null;
 
         const handlePrinted = () => {
             if (!resolved) {
                 console.log('✓ Impresión completada');
                 resolved = true;
+                clearTimeout(timeoutId);
                 resolve({ success: true });
             }
         };
@@ -23,6 +25,7 @@ const sendToPrinter = (printer, data) => {
             if (!resolved) {
                 console.error('✗ Error durante impresión:', error);
                 resolved = true;
+                clearTimeout(timeoutId);
                 reject(new Error(`Error de impresora: ${error.message || error}`));
             }
         };
@@ -37,7 +40,7 @@ const sendToPrinter = (printer, data) => {
             console.log('🖨️  Comando de impresión enviado');
             
             // Timeout de seguridad: algunas impresoras no emiten evento 'printed'
-            setTimeout(() => {
+            timeoutId = setTimeout(() => {
                 if (!resolved) {
                     console.log('✓ Impresión completada (sin confirmación explícita)');
                     resolved = true;

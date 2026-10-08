@@ -38,9 +38,13 @@ desktop.ini
 
 # Testing
 coverage/
+coverage-integration/
 .nyc_output/
 
 # Temp files
 tmp/
 temp/
 *.tmp
+
+# Sonarqube
+.scannerwork/

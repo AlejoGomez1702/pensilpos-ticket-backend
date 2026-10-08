@@ -8,6 +8,19 @@ const { clearPrintQueue } = require('../helpers/printer-queue.helper');
 // Semáforo simple para evitar impresiones concurrentes
 let printLock = Promise.resolve();
 
+/**
+ * Ejecuta la tarea cuando terminen las impresiones anteriores
+ * @param {Function} task - Tarea de impresión
+ * @returns {Promise} Resultado de la tarea (rechaza si la tarea falla)
+ */
+const withPrintLock = (task) => {
+    const run = printLock.then(task);
+    // La cola sigue encadenada aunque esta impresión falle: el error solo lo recibe
+    // quien pidió esta impresión, no las siguientes.
+    printLock = run.catch(() => {});
+    return run;
+};
+
 const printTicket = async( req = request, res = response ) => {
 
     const { printer } = req.ticket;
@@ -18,7 +31,7 @@ const printTicket = async( req = request, res = response ) => {
         console.log(`📄 Datos generados: ${data.length} bytes`);
 
         // [2] Esperar turno y ejecutar impresión de forma secuencial
-        await (printLock = printLock.then(async () => {
+        await withPrintLock(async () => {
             // [2.1] Inicializar impresora
             const receiptPrinter = new SystemReceiptPrinter({ name: printer.name });
 
@@ -29,10 +42,7 @@ const printTicket = async( req = request, res = response ) => {
             clearPrintQueue(printer.name).catch(err => 
                 console.warn('Error limpiando cola:', err.message)
             );
-        }).catch((error) => {
-            console.error('Error en semáforo de impresión:', error.message);
-            throw error; // Re-lanzar para que el catch externo lo capture
-        }));
+        });
 
         return res.json({
             ok: true,
@@ -64,7 +74,7 @@ const printKitchenTicket = async( req = request, res = response ) => {
         console.log(`🍳 Ticket de cocina generado: ${data.length} bytes`);
 
         // [2] Esperar turno y ejecutar impresión de forma secuencial
-        await (printLock = printLock.then(async () => {
+        await withPrintLock(async () => {
             // [2.1] Inicializar impresora
             const receiptPrinter = new SystemReceiptPrinter({ name: printer.name });
 
@@ -75,10 +85,7 @@ const printKitchenTicket = async( req = request, res = response ) => {
             clearPrintQueue(printer.name).catch(err => 
                 console.warn('Error limpiando cola:', err.message)
             );
-        }).catch((error) => {
-            console.error('Error en semáforo de impresión:', error.message);
-            throw error; // Re-lanzar para que el catch externo lo capture
-        }));
+        });
 
         return res.json({
             ok: true,

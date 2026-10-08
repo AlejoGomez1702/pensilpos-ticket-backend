@@ -51,6 +51,31 @@ node node-service.js --install     # Instala e inicia el servicio
 node node-service.js --uninstall   # Detiene y desinstala el servicio
 ```
 
+## 🧪 Tests
+
+Misma estructura que `pensilpos-backend`, con Jest:
+
+- **Unitarios** (`tests/`, `*.test.js`): cada módulo de `src/` aislado, con sus dependencias mockeadas.
+- **Integración** (`tests-integration/`, `*.integration.test.js`): peticiones HTTP con supertest contra la app de Express real. Solo se reemplaza la frontera externa: la impresora física (`tests-integration/helpers/fake-receipt-printer.js`) y la limpieza de la cola de Windows.
+
+```bash
+npm test                            # Unitarios
+npm run test:coverage               # Unitarios con cobertura (coverage/)
+npm run test:integration            # Integración
+npm run test:integration:coverage   # Integración con cobertura (coverage-integration/)
+```
+
+## 🔍 Calidad de código (SonarQube)
+
+Mismo flujo que `pensilpos-backend` (ver su `spec-005-sonarqube-scan-local.md`): SonarQube local en `http://localhost:10000` y el scanner `@sonar/scan` instalado globalmente (requiere Node >= 22.12).
+
+```powershell
+$env:SONAR_TOKEN="<TOKEN_LOCAL_SONARQUBE>"
+npm run sonar   # Corre ambas suites con cobertura y luego el scan
+```
+
+Resultados en http://localhost:10000/dashboard?id=pensilpos-ticket-backend
+
 ## 📡 API Endpoints
 
 - `POST /api/printer/print-ticket` - Imprimir ticket de venta
