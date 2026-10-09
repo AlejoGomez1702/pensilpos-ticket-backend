@@ -79,7 +79,9 @@ Resultados en http://localhost:10000/dashboard?id=pensilpos-ticket-backend
 ## 📡 API Endpoints
 
 - `POST /api/printer/print-ticket` - Imprimir ticket de venta
-- `POST /api/printer/print-kitchen-ticket` - Imprimir comanda de cocina
+- `POST /api/printer/print-kitchen-ticket` - Imprimir comanda de cocina (**obsoleto**: el frontend ya no la imprime; se conserva hasta decidir si se retoma o se elimina)
+
+El frontend solo llama a este servicio para los establecimientos con `ticket_print_method: LOCAL_SERVICE` (lo configura el super administrador desde el super-dashboard). El resto imprime con el diálogo del navegador.
 
 Ver ejemplos de peticiones en `rest-client.http`.
 

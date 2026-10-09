@@ -30,6 +30,10 @@ router.post('/print-ticket', [
   validateTicketData
 ], printTicket);
 
+/**
+ * @deprecated La comanda de cocina está en desuso: el frontend ya no la imprime en ningún flujo.
+ * Se conserva hasta decidir si se retoma o se elimina.
+ */
 router.post('/print-kitchen-ticket', [
   validatePrinter,
   check('order_data', 'Los datos de la orden son obligatorios').exists(),
