@@ -78,6 +78,14 @@ const buildProductsTableHeader = (encoder) => {
 };
 
 /**
+ * Gramos como kg con tres decimales, como los muestra la báscula: 1250 → "1,250"
+ * @param {Number} grams - Peso en gramos
+ * @returns {String} kg con coma decimal
+ */
+const formatKilograms = (grams) =>
+    (grams / 1000).toLocaleString('es-CO', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+
+/**
  * Construye la sección de productos
  * @param {Object} encoder - Instancia del encoder
  * @param {Array} products - Lista de productos
@@ -88,18 +96,28 @@ const buildProductsSection = (encoder, products) => {
     
     products.forEach(product => {
         // Formatear valores
-        const quantity = `x${product.quantity}`;
+        const weighed = product.saleUnit === 'WEIGHT';
         const unitPrice = `$${product.unitPrice.toLocaleString('es-CO')}`;
         const total = `$${product.total.toLocaleString('es-CO')}`;
 
-        // Tabla con información del producto
+        // Tabla con información del producto. Por peso (SPEC-051) el peso no cabe en la columna
+        // de cantidad: la fila lleva el total y el detalle va debajo, como en una báscula.
         ticketEncoder = ticketEncoder
             .table(
                 config.printer.paper.productsTable,
                 [
-                    [ product.name, quantity, unitPrice, total ]
+                    weighed
+                        ? [ product.name, '', '', total ]
+                        : [ product.name, `x${product.quantity}`, unitPrice, total ]
                 ]
             );
+
+        if (weighed) {
+            ticketEncoder = ticketEncoder
+                .font('B')
+                .line(`  ${formatKilograms(product.quantity)} kg x ${unitPrice}/kg`)
+                .font('A');
+        }
 
         // Solo mostrar nota si existe
         if (product.note) {

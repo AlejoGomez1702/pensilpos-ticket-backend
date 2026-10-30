@@ -27,16 +27,23 @@ const validateTicketData = ( req, res, next ) => {
     
     // [3] Productos de la venta (opcional, puede ser una venta de solo tiempo)
     const products = sale_data.products || [];
+    // Una línea por peso (SPEC-051) trae `sale_unit: 'WEIGHT'`: su cantidad son gramos y su
+    // precio, por kg. Las demás no traen la unidad.
+    const isWeighed = (product) => product.sale_unit === 'WEIGHT';
     req.ticket.products = products.map(product => ({
         name: product.product_name,
         quantity: product.count,
+        ...(isWeighed(product) && { saleUnit: 'WEIGHT' }),
         unitPrice: product.sale_price,
         total: product.total_item_value,
         note: product.product_note || null
     }));
 
-    // Calcular total de artículos entregados
-    const totalArticles = products.reduce((sum, product) => sum + product.count, 0);
+    // Calcular total de artículos entregados (una línea por peso es un artículo, no sus gramos)
+    const totalArticles = products.reduce(
+        (sum, product) => sum + (isWeighed(product) ? 1 : product.count),
+        0
+    );
     
     req.ticket.metadata = {
         date: date,

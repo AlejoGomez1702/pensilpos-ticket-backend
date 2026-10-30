@@ -72,3 +72,26 @@ describe('validateTicketData', () => {
         expect(req.ticket.billiard).toEqual({ tableName: 'Mesa 3', elapsedMinutes: 90, hourlyRate: 10000, cost: 15000 });
     });
 });
+
+describe('validateTicketData: productos por peso (SPEC-051)', () => {
+    it('marca la línea por peso y la cuenta como un artículo', () => {
+        const req = createReq({
+            establishment_name: 'Mi Fruver',
+            sale_data: {
+                products: [
+                    { product_name: 'Manzana Roja', count: 1250, sale_unit: 'WEIGHT', sale_price: 9800, total_item_value: 12250 },
+                    { product_name: 'Pulpa De Mora', count: 2, sale_price: 5500, total_item_value: 11000 },
+                ],
+                total: 23250,
+            },
+        });
+
+        validateTicketData(req, {}, jest.fn());
+
+        expect(req.ticket.products).toEqual([
+            { name: 'Manzana Roja', quantity: 1250, saleUnit: 'WEIGHT', unitPrice: 9800, total: 12250, note: null },
+            { name: 'Pulpa De Mora', quantity: 2, unitPrice: 5500, total: 11000, note: null },
+        ]);
+        expect(req.ticket.metadata.totalArticles).toBe(3);
+    });
+});

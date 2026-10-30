@@ -72,3 +72,26 @@ describe('ticket-builder.helper', () => {
         });
     });
 });
+
+describe('ticket-builder.helper: productos por peso (SPEC-051 CA-17)', () => {
+    const apple = { name: 'Manzana Roja', quantity: 1250, saleUnit: 'WEIGHT', unitPrice: 9800, total: 12250, note: null };
+
+    it('imprime el peso en kg, el precio por kg y el total de la línea', () => {
+        const text = toText(buildTicket(createTicketData({ products: [apple], total: 12250 })));
+
+        expect(text).toContain('Manzana Roja');
+        expect(text).toContain('1,250 kg x $9.800/kg');
+        expect(text).toContain('$12.250');
+    });
+
+    it('la fila de un producto por peso no pone cantidad ni precio unitario en sus columnas', () => {
+        const encoder = new ReceiptPrinterEncoder({ columns: config.printer.paper.columns });
+        const tableSpy = jest.spyOn(encoder, 'table');
+
+        buildProductsSection(encoder, [apple]);
+
+        expect(tableSpy).toHaveBeenCalledWith(config.printer.paper.productsTable, [
+            ['Manzana Roja', '', '', '$12.250'],
+        ]);
+    });
+});
