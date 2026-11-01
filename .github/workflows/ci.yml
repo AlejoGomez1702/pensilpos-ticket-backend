@@ -1,0 +1,36 @@
+# CI del servicio de tickets: pruebas unitarias e integración (supertest sobre la app real, impresora simulada).
+# Corre en Linux aunque el servicio se instala en Windows: las pruebas no tocan node-windows ni impresoras reales.
+name: CI
+
+on:
+    pull_request:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+    test:
+        name: Pruebas unitarias e integración
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@v5
+            - uses: actions/setup-node@v5
+              with:
+                  # Node 22, no 24: @grandchef/node-printer 0.8.0 (vía @point-of-sale/system-receipt-printer)
+                  # usa una versión de `nan` que no compila contra el V8 de Node 24. En 22 baja su binario
+                  # precompilado o, si no, compila con las cabeceras de CUPS del paso siguiente.
+                  node-version: 22
+            # Por si node-printer no encuentra binario precompilado y tiene que compilarse (cups-config).
+            - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libcups2-dev
+            # El repo no versiona package-lock.json (.gitignore), así que no hay `npm ci` ni caché por lockfile.
+            - run: npm install --no-audit --no-fund
+            - run: npm run test:coverage
+            - run: npm run test:integration
