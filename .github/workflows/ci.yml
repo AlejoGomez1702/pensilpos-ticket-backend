@@ -25,6 +25,9 @@ jobs:
             - uses: actions/setup-node@v5
               with:
                   node-version: 24
+            # @grandchef/node-printer (vía @point-of-sale/system-receipt-printer) no publica binario para
+            # Node 24 en Linux: se compila y necesita las cabeceras de CUPS (cups-config).
+            - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libcups2-dev
             # El repo no versiona package-lock.json (.gitignore), así que no hay `npm ci` ni caché por lockfile.
             - run: npm install --no-audit --no-fund
             - run: npm run test:coverage
