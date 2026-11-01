@@ -24,9 +24,11 @@ jobs:
             - uses: actions/checkout@v5
             - uses: actions/setup-node@v5
               with:
-                  node-version: 24
-            # @grandchef/node-printer (vía @point-of-sale/system-receipt-printer) no publica binario para
-            # Node 24 en Linux: se compila y necesita las cabeceras de CUPS (cups-config).
+                  # Node 22, no 24: @grandchef/node-printer 0.8.0 (vía @point-of-sale/system-receipt-printer)
+                  # usa una versión de `nan` que no compila contra el V8 de Node 24. En 22 baja su binario
+                  # precompilado o, si no, compila con las cabeceras de CUPS del paso siguiente.
+                  node-version: 22
+            # Por si node-printer no encuentra binario precompilado y tiene que compilarse (cups-config).
             - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libcups2-dev
             # El repo no versiona package-lock.json (.gitignore), así que no hay `npm ci` ni caché por lockfile.
             - run: npm install --no-audit --no-fund
