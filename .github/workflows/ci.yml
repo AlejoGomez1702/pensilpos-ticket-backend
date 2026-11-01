@@ -1,0 +1,31 @@
+# CI del servicio de tickets: pruebas unitarias e integración (supertest sobre la app real, impresora simulada).
+# Corre en Linux aunque el servicio se instala en Windows: las pruebas no tocan node-windows ni impresoras reales.
+name: CI
+
+on:
+    pull_request:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+    test:
+        name: Pruebas unitarias e integración
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@v5
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 24
+            # El repo no versiona package-lock.json (.gitignore), así que no hay `npm ci` ni caché por lockfile.
+            - run: npm install --no-audit --no-fund
+            - run: npm run test:coverage
+            - run: npm run test:integration
