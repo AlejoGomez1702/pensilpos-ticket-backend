@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(npm test *)",
+      "Bash(npm run test:coverage)",
+      "Bash(npm run test:integration)",
+      "Bash(npm run test:integration:coverage)",
+      "Bash(npx jest *)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git log)",
+      "Bash(git log *)"
+    ],
+    "ask": [
+      "Bash(npm install *)",
+      "Bash(node node-service.js *)",
+      "Bash(npm run sonar*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push --force-with-lease*)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(git stash drop *)",
+      "Bash(git stash clear)",
+      "Bash(rm -rf *)",
+      "PowerShell(Remove-PrintJob *)",
+      "PowerShell(git push --force *)",
+      "PowerShell(git push -f *)",
+      "PowerShell(git push --force-with-lease*)",
+      "PowerShell(git reset --hard *)",
+      "PowerShell(git clean *)",
+      "PowerShell(git stash drop *)",
+      "PowerShell(git stash clear)"
+    ]
+  }
+}
