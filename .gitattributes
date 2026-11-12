@@ -1,0 +1,3 @@
+# Saltos de línea: siempre LF en el repositorio y en la copia de trabajo, también en Windows
+# (aunque Git tenga core.autocrlf=true), igual que los demás repos de Pensil.Pos.
+* text=auto eol=lf
