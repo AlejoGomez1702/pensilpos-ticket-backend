@@ -48,3 +48,6 @@ temp/
 
 # Sonarqube
 .scannerwork/
+
+# Claude Code: ajustes personales (no se suben)
+.claude/settings.local.json
