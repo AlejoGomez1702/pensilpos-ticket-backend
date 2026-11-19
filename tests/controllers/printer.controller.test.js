@@ -109,3 +109,118 @@ describe.each([
         expect(res.status).toHaveBeenCalledWith(500);
     });
 });
+
+// ---------------------------------------------------------------------------------------------
+// Auditoría adversarial: cola de impresión
+// ---------------------------------------------------------------------------------------------
+describe('cola de impresión (withPrintLock)', () => {
+    const data = new Uint8Array([1, 2, 3]);
+    const req = () => ({ ticket: { printer: { name: 'Pensilpos' } } });
+    const deferred = () => {
+        let resolve, reject;
+        const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
+        return { promise, resolve, reject };
+    };
+    const flush = () => new Promise(setImmediate);
+
+    beforeEach(() => {
+        jest.spyOn(console, 'log').mockImplementation(() => {});
+        jest.spyOn(console, 'warn').mockImplementation(() => {});
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+        buildTicket.mockReturnValue(data);
+        buildKitchenTicket.mockReturnValue(data);
+        sendToPrinter.mockResolvedValue({ success: true });
+        clearPrintQueue.mockResolvedValue({ success: true });
+    });
+
+    it('imprime en orden de llegada y el fallo de una impresión solo lo recibe quien la pidió', async () => {
+        const prints = [deferred(), deferred(), deferred()];
+        prints.forEach((print) => sendToPrinter.mockImplementationOnce(() => print.promise));
+        const responses = [createRes(), createRes(), createRes()];
+
+        const requests = responses.map((res) => printTicket(req(), res));
+        await flush();
+        expect(sendToPrinter).toHaveBeenCalledTimes(1);
+
+        prints[0].resolve({ success: true });
+        await flush();
+        expect(sendToPrinter).toHaveBeenCalledTimes(2);
+        expect(responses[0].json).toHaveBeenCalledWith(expect.objectContaining({ ok: true }));
+        expect(responses[2].json).not.toHaveBeenCalled();
+
+        prints[1].reject(new Error('Error de impresora: Sin papel'));
+        await flush();
+        expect(sendToPrinter).toHaveBeenCalledTimes(3);
+
+        prints[2].resolve({ success: true });
+        await Promise.all(requests);
+
+        expect(responses[1].status).toHaveBeenCalledWith(500);
+        expect(responses[1].json).toHaveBeenCalledWith(expect.objectContaining({ ok: false, error: 'Error de impresora: Sin papel' }));
+        expect(responses[0].status).not.toHaveBeenCalled();
+        expect(responses[2].status).not.toHaveBeenCalled();
+        expect(responses[2].json).toHaveBeenCalledWith(expect.objectContaining({ ok: true }));
+        // La limpieza de la cola solo corre tras una impresión que salió bien.
+        expect(clearPrintQueue).toHaveBeenCalledTimes(2);
+    });
+
+    it('el ticket de venta y la comanda comparten la cola: es la misma impresora', async () => {
+        const first = deferred();
+        sendToPrinter.mockImplementationOnce(() => first.promise);
+
+        const sale = printTicket(req(), createRes());
+        const kitchen = printKitchenTicket(req(), createRes());
+        await flush();
+
+        expect(sendToPrinter).toHaveBeenCalledTimes(1);
+
+        first.resolve({ success: true });
+        await Promise.all([sale, kitchen]);
+
+        expect(sendToPrinter).toHaveBeenCalledTimes(2);
+    });
+
+    it('no espera la limpieza de la cola de Windows: responde y deja pasar la siguiente impresión', async () => {
+        clearPrintQueue.mockReturnValue(new Promise(() => {}));
+        const first = createRes();
+        const second = createRes();
+
+        await Promise.all([printTicket(req(), first), printTicket(req(), second)]);
+
+        expect(first.json).toHaveBeenCalledWith(expect.objectContaining({ ok: true }));
+        expect(second.json).toHaveBeenCalledWith(expect.objectContaining({ ok: true }));
+    });
+
+    it('un fallo al construir el ticket responde 500 con su mensaje y no ocupa la cola', async () => {
+        buildTicket.mockImplementationOnce(() => { throw new Error('Datos inválidos'); });
+        const failed = createRes();
+        const next = createRes();
+
+        await printTicket(req(), failed);
+        await printTicket(req(), next);
+
+        expect(failed.status).toHaveBeenCalledWith(500);
+        expect(failed.json).toHaveBeenCalledWith({ ok: false, msg: 'Error al imprimir el ticket', error: 'Datos inválidos', stack: undefined });
+        expect(next.json).toHaveBeenCalledWith({ ok: true, msg: 'Ticket impreso correctamente', printer: 'Pensilpos', bytes: 3 });
+        expect(sendToPrinter).toHaveBeenCalledTimes(1);
+    });
+
+    describe('stack del error en la respuesta', () => {
+        const originalEnv = process.env.NODE_ENV;
+        afterEach(() => { process.env.NODE_ENV = originalEnv; });
+
+        it.each([
+            ['production', false],
+            ['development', true],
+        ])('con NODE_ENV=%s, ¿incluye el stack? %p', async (env, included) => {
+            process.env.NODE_ENV = env;
+            sendToPrinter.mockRejectedValue(new Error('Sin papel'));
+            const res = createRes();
+
+            await printTicket(req(), res);
+
+            const body = res.json.mock.calls[0][0];
+            expect(typeof body.stack === 'string').toBe(included);
+        });
+    });
+});

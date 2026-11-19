@@ -52,4 +52,49 @@ describe('printer-queue.helper', () => {
             await expect(getPendingJobs('Pensilpos')).resolves.toBe(0);
         });
     });
+
+    // --- Auditoría adversarial: el nombre de la impresora dentro del comando de PowerShell ---
+    describe('nombre de la impresora en el comando', () => {
+        beforeEach(() => mockExecResult(null, '0'));
+
+        it('clearPrintQueue ejecuta exactamente un comando, con el nombre entre comillas simples', async () => {
+            await clearPrintQueue('Caja 2 (EPSON TM-T20)');
+
+            expect(exec).toHaveBeenCalledTimes(1);
+            expect(exec.mock.calls[0][0]).toBe(
+                `powershell -Command "Get-PrintJob -PrinterName 'Caja 2 (EPSON TM-T20)' -ErrorAction SilentlyContinue | Remove-PrintJob -ErrorAction SilentlyContinue"`
+            );
+        });
+
+        it('getPendingJobs consulta solo la impresora indicada', async () => {
+            await getPendingJobs('Caja 2');
+
+            expect(exec.mock.calls[0][0]).toBe(`powershell -Command "(Get-PrintJob -PrinterName 'Caja 2').Count"`);
+        });
+
+        // Dentro de comillas simples PowerShell no expande variables ni subexpresiones.
+        it('un nombre con $ o punto y coma queda dentro de las comillas simples', async () => {
+            await clearPrintQueue('Caja; $(calc)');
+
+            expect(exec.mock.calls[0][0]).toContain(`-PrinterName 'Caja; $(calc)' -ErrorAction`);
+        });
+
+        // BUG-AUDIT: el nombre se interpola sin escapar. Una impresora llamada "Caja de O'Brien" cierra la comilla
+        // antes de tiempo: el comando queda mal formado (la cola nunca se limpia, y el error se silencia) y el resto
+        // del nombre se interpreta como PowerShell. Hoy el nombre solo sale de PRINTER_NAME (.env).
+        it.failing('una comilla simple en el nombre no cierra la cadena del comando', async () => {
+            await clearPrintQueue("Caja de O'Brien");
+
+            const command = exec.mock.calls[0]?.[0] ?? '';
+            expect(command).not.toContain("'Caja de O'Brien'");
+        });
+
+        // BUG-AUDIT: lo mismo con una comilla doble, que cierra el argumento de -Command.
+        it.failing('una comilla doble en el nombre no cierra el argumento -Command', async () => {
+            await clearPrintQueue('Caja "principal"');
+
+            const command = exec.mock.calls[0]?.[0] ?? '';
+            expect(command).not.toContain(`'Caja "principal"'`);
+        });
+    });
 });

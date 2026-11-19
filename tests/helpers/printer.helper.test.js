@@ -73,4 +73,49 @@ describe('sendToPrinter', () => {
 
         await expect(sendToPrinter(printer, new Uint8Array())).rejects.toThrow('Puerto cerrado');
     });
+
+    // --- Auditoría adversarial ---
+
+    it('espera los 2 segundos completos antes de asumir la impresión', async () => {
+        const printer = createPrinter();
+        const settled = jest.fn();
+
+        sendToPrinter(printer, new Uint8Array()).then(settled, settled);
+        await jest.advanceTimersByTimeAsync(1999);
+
+        expect(settled).not.toHaveBeenCalled();
+
+        await jest.advanceTimersByTimeAsync(1);
+
+        expect(settled).toHaveBeenCalledWith({ success: true, assumed: true });
+    });
+
+    it('conserva el detalle cuando el driver emite el error como texto y no como Error', async () => {
+        const printer = createPrinter();
+
+        const promise = sendToPrinter(printer, new Uint8Array());
+        printer.listeners.error('Tapa abierta');
+
+        await expect(promise).rejects.toThrow('Error de impresora: Tapa abierta');
+    });
+
+    it('escucha los eventos antes de imprimir: no pierde una confirmación o un error inmediatos', async () => {
+        const confirming = createPrinter();
+        confirming.print.mockImplementation(() => confirming.listeners.printed());
+        const failing = createPrinter();
+        failing.print.mockImplementation(() => failing.listeners.error(new Error('Sin papel')));
+
+        await expect(sendToPrinter(confirming, new Uint8Array())).resolves.toEqual({ success: true });
+        await expect(sendToPrinter(failing, new Uint8Array())).rejects.toThrow('Error de impresora: Sin papel');
+    });
+
+    it('un error que llega después de haber asumido la impresión ya no cambia el resultado', async () => {
+        const printer = createPrinter();
+
+        const promise = sendToPrinter(printer, new Uint8Array());
+        jest.advanceTimersByTime(2000);
+        printer.listeners.error(new Error('Sin papel'));
+
+        await expect(promise).resolves.toEqual({ success: true, assumed: true });
+    });
 });

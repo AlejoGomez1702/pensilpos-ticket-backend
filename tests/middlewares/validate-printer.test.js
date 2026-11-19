@@ -60,4 +60,34 @@ describe('validatePrinter', () => {
             error: 'Spooler detenido',
         });
     });
+
+    // --- Auditoría adversarial ---
+
+    it('la respuesta de impresora no configurada explica qué hacer y no deja seguir a la impresión', async () => {
+        SystemReceiptPrinter.getPrinters.mockReturnValue([]);
+        const res = createRes();
+        const req = {};
+
+        await validatePrinter(req, res, jest.fn());
+
+        expect(res.json).toHaveBeenCalledWith({
+            ok: false,
+            msg: `Impresora "${config.printer.name}" no configurada`,
+            error: `Por favor, configure una impresora con el nombre "${config.printer.name}" en su sistema operativo`,
+            availablePrinters: [],
+        });
+        expect(req.ticket.printer).toBeUndefined();
+    });
+
+    // La impresora del ticket sale solo de PRINTER_NAME: nada que traiga la petición puede elegirla
+    // (su nombre termina en un comando de PowerShell al limpiar la cola).
+    it('descarta cualquier req.ticket previo: la impresora siempre es la configurada', async () => {
+        const printer = { name: config.printer.name };
+        SystemReceiptPrinter.getPrinters.mockReturnValue([printer]);
+        const req = { ticket: { printer: { name: "x'; Remove-Item C:\\ -Recurse; '" }, total: 1 }, body: { ticket: { printer: { name: 'Otra' } } } };
+
+        await validatePrinter(req, createRes(), jest.fn());
+
+        expect(req.ticket).toEqual({ printer });
+    });
 });
